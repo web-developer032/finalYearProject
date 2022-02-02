@@ -1,15 +1,17 @@
 :root {
-  --clr-green-light: hsl(179, 34%, 48%);
-  --clr-green-dark: hsl(155, 72%, 61%);
-  --clr-grey-light: rgba(255, 255, 255, 0.4);
-  --clr-grey-dark: rgba(255, 255, 255, 0.2);
+    --clr-green-light: hsl(179, 34%, 48%);
+    --clr-green-dark: hsl(155, 72%, 61%);
+    --clr-grey-light: rgba(255, 255, 255, 0.4);
+    --clr-grey-dark: rgba(255, 255, 255, 0.2);
+
+    --header-height: 8vh;
 }
 
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  outline: none;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    outline: none;
 }
 
 *::after,
@@ -22,41 +24,66 @@ label,
 select,
 span,
 i {
-  display: inline-block;
+    display: inline-block;
 }
 
 html {
-  font-size: 62.5%;
+    font-size: 62.5%;
 }
 
 body {
-  font-family: "Raleway", sans-serif;
-  font-weight: 300;
+    font-family: "Raleway", sans-serif;
+    font-weight: 300;
+    background: var(--clr-green-light);
+    background: linear-gradient(
+        to bottom right,
+        var(--clr-green-light) 0%,
+        var(--clr-green-dark) 100%
+    );
+    background-repeat: no-repeat;
+
+    padding-top: var(--header-height);
 }
 
 .btn {
-  background-color: white;
-  border: 0;
-  padding: 1rem 1.5rem;
-  color: var(--clr-green-dark);
-  border-radius: 3px;
+    background-color: white;
+    border: 0;
+    padding: 1rem 1.5rem;
+    color: var(--clr-green-dark);
+    border-radius: 3px;
 
-  cursor: pointer;
+    cursor: pointer;
 
-  font-family: inherit;
-  font-size: 1.8rem;
+    font-family: inherit;
+    font-size: 1.8rem;
 
-  transition: 0.25s;
+    transition: 0.25s;
 }
 .btn:hover {
-  background-color: #f5f7f9;
+    background-color: #f5f7f9;
 }
 
 .icon-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 .icon-btn i {
-  font-size: 2.5rem;
+    font-size: 2.5rem;
+}
+
+.main {
+    min-height: calc(100vh - var(--header-height));
+    padding: 2rem 4rem;
+    color: #fff;
+}
+
+.main h1 {
+    text-align: center;
+    font-size: 4rem;
+    margin-bottom: 2rem;
+}
+
+.main .surveyBox:not(:last-child) {
+    margin-bottom: 2rem;
 }
