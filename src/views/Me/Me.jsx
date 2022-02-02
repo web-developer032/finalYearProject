@@ -1,28 +1,24 @@
 import { updatePassword, updateProfile } from "firebase/auth";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useRef } from "react";
 
 import StoreContext from "../../controller/Context";
 import { auth, storage } from "../../controller/Firebase";
-import { getBase64URL, imageResizer, resizeImg } from "../../controller/utils";
+import { getBase64URL, resizeImg } from "../../controller/utils";
 import defaultImage from "../../images/user.png";
 import "./me.css";
 
 function Me() {
     const { user, setUser, setLoading } = useContext(StoreContext);
-    const [userImageChanged, setUserImageChanged] = useState(false);
+    let userImageChanged = false;
 
     const imgRef = useRef(null);
-
-    const [userImage, setUserImage] = useState(
-        user.photoURL ? user.photoURL : defaultImage
-    );
 
     const handleUserImage = async (e) => {
         const img = e.target.files[0];
 
         if (img?.type.startsWith("image/")) {
-            setUserImageChanged(true);
+            userImageChanged = true;
             const imgURL = await getBase64URL(img);
             imgRef.current.src = imgURL;
         }
@@ -87,8 +83,8 @@ function Me() {
                     <figure>
                         <img
                             ref={imgRef}
-                            src={userImage}
-                            alt={`${user.photoURL}`}
+                            src={user.photoURL ? user.photoURL : defaultImage}
+                            alt={`${user.displayName}`}
                             id="userImage"
                         />
                     </figure>
