@@ -1,7 +1,9 @@
-import { auth } from "./controller/Firebase";
+import { auth, db } from "./controller/Firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import React, { useState, useEffect } from "react";
 import { Redirect, Route, Switch } from "react-router";
+
+import { collection, getDocs } from "firebase/firestore";
 import axios from "axios";
 
 import { Provider } from "./controller/Context";
@@ -23,16 +25,25 @@ async function setUserStatus(setUser) {
 function App() {
     const [user, setUser] = useState();
     const [loading, setLoading] = useState(false);
+    const [surveys, setSurveys] = useState([]);
 
     // SETTING USER
     useEffect(() => {
         setUserStatus(setUser);
+
+        async function getSurveys() {
+            let surveysSnapshot = await getDocs(collection(db, "surveys"));
+            setSurveys(surveysSnapshot);
+        }
+
+        getSurveys();
     }, []);
     return (
         <Provider value={{ user, setUser, loading, setLoading }}>
             <>
                 <Loading loading={loading} />
                 <Header />
+
                 <Switch>
                     <Route path="/login" exact>
                         <Login />
@@ -43,7 +54,7 @@ function App() {
                     </Route>
 
                     <Route path="/" exact>
-                        <Home />
+                        <Home surveys={surveys} />
                     </Route>
 
                     {user ? (
@@ -51,7 +62,7 @@ function App() {
                     ) : (
                         <Redirect to="/login"></Redirect>
                     )}
-                    {/* <Route path="/contactus" component={contactus} /> */}
+
                     <Route
                         path="/admin"
                         render={() => {
