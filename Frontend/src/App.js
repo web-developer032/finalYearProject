@@ -1,9 +1,6 @@
-import { auth, db } from "./controller/Firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import { Redirect, Route, Switch } from "react-router";
 
-import { collection, getDocs } from "firebase/firestore";
 import axios from "axios";
 
 import { Provider } from "./controller/Context";
@@ -14,34 +11,55 @@ import Signup from "./views/signup/Signup";
 import Loading from "./views/reuseables/loading/Loading";
 import Header from "./views/header/Header";
 import Me from "./views/Me/Me";
-
-async function setUserStatus(setUser) {
-    await onAuthStateChanged(auth, (user) => {
-        if (user) return setUser(user);
-        return setUser(null);
-    });
-}
+import ErrorNotification from "./views/reuseables/ErrorNotification/ErrorNotification";
+import { setAuthToken } from "./controller/AuthController";
 
 function App() {
-    const [user, setUser] = useState();
+    const apiRoutes = {
+        survey: "/api/v1/surveys",
+        user: "/api/v1/users",
+    };
+    const [user, setUser] = useState(null);
+    const [error, setError] = useState(() => ({ show: false, message: "" }));
     const [loading, setLoading] = useState(false);
     const [surveys, setSurveys] = useState([]);
 
-    // SETTING USER
+    // SETTING SURVEYS
     useEffect(() => {
-        setUserStatus(setUser);
-
-        async function getSurveys() {
-            let surveysSnapshot = await getDocs(collection(db, "surveys"));
-            setSurveys(surveysSnapshot);
-        }
-
-        getSurveys();
+        (async () => {
+            const res = await axios.get(`${apiRoutes.survey}`);
+            if (res.data.results) {
+                setSurveys(res.data.data.docs);
+            }
+        })();
     }, []);
+
+    // SETTING USER
+    useLayoutEffect(() => {
+        (async () => {
+            const res = await axios.get(`${apiRoutes.user}/checkUserStatus`);
+            const data = res.data;
+            if (data.data.user) {
+                setAuthToken(data.token);
+                setUser(data.data.user);
+            }
+        })();
+    }, []);
+
+    // HIDING ERROR AFTER 5s
+    useEffect(() => {
+        setTimeout(() => {
+            setError({ show: false, message: "" });
+        }, 1000 * 5);
+    }, [error.show]);
+
     return (
-        <Provider value={{ user, setUser, loading, setLoading }}>
+        <Provider
+            value={{ apiRoutes, user, setUser, loading, setLoading, setError }}
+        >
             <>
                 <Loading loading={loading} />
+                <ErrorNotification show={error.show} message={error.message} />
                 <Header />
 
                 <Switch>

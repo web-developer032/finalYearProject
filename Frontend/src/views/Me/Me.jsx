@@ -1,15 +1,13 @@
-import { updatePassword, updateProfile } from "firebase/auth";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import React, { useContext, useRef } from "react";
+import axios from "axios";
+import React, { useContext, useEffect, useRef, useState } from "react";
 
 import StoreContext from "../../controller/Context";
-import { auth, storage } from "../../controller/Firebase";
 import { getBase64URL, resizeImg } from "../../controller/utils";
-import defaultImage from "../../images/user.png";
 import "./me.css";
 
 function Me() {
-    const { user, setUser, setLoading } = useContext(StoreContext);
+    const { apiRoutes, user, setUser, setLoading, setError } =
+        useContext(StoreContext);
     let userImageChanged = false;
 
     const imgRef = useRef(null);
@@ -24,55 +22,38 @@ function Me() {
         }
     };
 
-    const saveUserImage = async (img) => {
-        if (img?.type.startsWith("image/")) {
-            const imgURL = await getBase64URL(img);
-
-            const resizedImg = await resizeImg(imgURL, 500, false);
-            const userImageRef = ref(storage, `userImages/${user.uid}.png`);
-
-            await uploadBytes(userImageRef, resizedImg);
-        } else {
-            alert("Invalid Image file.");
-            return;
-        }
-    };
-
     const updateMe = async (e) => {
         e.preventDefault();
-
         setLoading(true);
+
         const name = e.target.name.value.trim();
-        const password = e.target.password.value.trim();
-        const confirmPassword = e.target.confirmPassword.value.trim();
+        const photo = e.target["user-image"].files[0];
 
-        const img = e.target["user-image"].files[0];
+        const formData = new FormData();
 
-        const userData = {};
-
-        if (name && name.toLowerCase() !== user.displayName.toLowerCase()) {
-            userData.displayName = name;
-        }
-
-        if (password === confirmPassword) {
-            await updatePassword(user, password);
+        if (name && name.toLowerCase() !== user.name.toLowerCase()) {
+            formData.append("name", name);
         }
 
         if (userImageChanged) {
-            await saveUserImage(img);
-
-            const userImageUrl = await getDownloadURL(
-                ref(storage, `userImages/${user.uid}.png`)
-            );
-
-            userData.photoURL = userImageUrl;
+            formData.append("photo", photo);
         }
 
-        await updateProfile(auth.currentUser, {
-            ...userData,
-        });
-
-        setUser((prevUser) => ({ ...prevUser, ...user }));
+        const res = await axios.patch(
+            `http://localhost:5000${apiRoutes.user}/updateMe`,
+            formData
+        );
+        console.log("Update: ", res.data);
+        if (res.data.status === "Success") {
+            setError({ show: true, message: "Image Successfully Updated." });
+            setUser(res.data.data.user);
+        } else {
+            setError({
+                show: true,
+                message:
+                    "Something went wrong please refresh page and try again.",
+            });
+        }
         setLoading(false);
     };
 
@@ -83,8 +64,8 @@ function Me() {
                     <figure>
                         <img
                             ref={imgRef}
-                            src={user.photoURL ? user.photoURL : defaultImage}
-                            alt={`${user.displayName}`}
+                            src={user.photo}
+                            alt={`${user.name}`}
                             id="userImage"
                         />
                     </figure>
@@ -121,10 +102,10 @@ function Me() {
                         type="text"
                         name="name"
                         id="name"
-                        defaultValue={user.displayName}
+                        defaultValue={user.name}
                     />
                 </div>
-                <div>
+                {/* <div>
                     <label htmlFor="password">Password</label>
                     <input
                         className="input"
@@ -141,7 +122,7 @@ function Me() {
                         name="confirmPassword"
                         id="confirmPassword"
                     />
-                </div>
+                </div> */}
                 <button className="btn">Update</button>
             </form>
         </section>

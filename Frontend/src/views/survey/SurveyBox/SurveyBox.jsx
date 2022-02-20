@@ -1,26 +1,23 @@
 import "../survey.css";
 
-function SurveyBox({ surveyId, survey }) {
-    console.log("survey");
-    console.log(survey);
+function SurveyBox({ survey }) {
     return (
-        <section className="surveyBox" id={surveyId}>
+        <section className="surveyBox" id={`survey-${survey.id}`}>
             <h2 className="surveyName">
-                {survey.surveyTitle}
+                {survey.title}
                 <span>
-                    Given by :
-                    <span className="totalPeople">
-                        {survey.surveyUsers.length}
-                    </span>
+                    taken by: &nbsp;
+                    <span className="totalPeople"> {survey.users.length}</span>
                 </span>
             </h2>
 
             <div className="surveyDetails">
-                <p className="surveySummary">{survey.surveyDescription}</p>
+                <p className="surveySummary">{survey.summary}</p>
 
                 <div className="actions">
                     <div className="surveyDeadline">
-                        Deadline: <span>{survey.surveyDeadline}</span>
+                        Deadline: &nbsp;
+                        <span>{new Date(survey.expire).toDateString()}</span>
                     </div>
                     <button className="btn">Start</button>
                 </div>

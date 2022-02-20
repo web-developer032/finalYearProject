@@ -71,7 +71,7 @@ async function resizeImg(photo, size, crop = true) {
     ctx.drawImage(img, x, y, w, h);
 
     return new Promise((resolve) => {
-        canvas.toBlob((blob) => {
+        canvas.to((blob) => {
             resolve(blob);
         }, "image/jpeg");
     });

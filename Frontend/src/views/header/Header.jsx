@@ -1,26 +1,23 @@
 import React, { useContext } from "react";
 import { Link } from "react-router-dom";
-import { signOut } from "firebase/auth";
-import { auth } from "../../controller/Firebase";
 
-import defaultImage from "../../images/user.png";
 import "./header.css";
 import StoreContext from "../../controller/Context";
+import axios from "axios";
+import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 
 function Header() {
-    const { user, setUser, setLoading } = useContext(StoreContext);
+    const { apiRoutes, user, setUser, setLoading } = useContext(StoreContext);
 
-    const handleSignout = () => {
+    const history = useHistory();
+    const handleSignout = async () => {
         setLoading(true);
-        signOut(auth)
-            .then(() => {
-                // Sign-out successful.
-                setUser(null);
-            })
-            .catch((error) => {
-                // An error happened.
-                console.log(error);
-            });
+        const res = await axios.get(`${apiRoutes.user}/logout`);
+
+        if (res.data.status === "Success") {
+            history.push("/");
+            setUser(null);
+        }
         setLoading(false);
     };
 
@@ -33,10 +30,7 @@ function Header() {
             {user ? (
                 <nav>
                     <Link to="/me" className="userImage">
-                        <img
-                            src={user.photoURL ? user.photoURL : defaultImage}
-                            alt="User"
-                        />
+                        <img src={user.photo} alt={user.name} />
                     </Link>
 
                     <button className="btn" onClick={handleSignout}>

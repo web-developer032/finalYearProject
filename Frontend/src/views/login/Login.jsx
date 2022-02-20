@@ -1,54 +1,29 @@
-import { auth } from "../../controller/Firebase";
 import React, { useContext } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Redirect } from "react-router";
 
 import "./login.css";
 import StoreContext from "../../controller/Context";
-import { facebookLogin, googleLogin } from "../../controller/OAuth";
-import {
-    setPersistence,
-    browserLocalPersistence,
-    signInWithEmailAndPassword,
-} from "firebase/auth";
+import { login } from "../../controller/AuthController";
 
 function Login() {
-    const { user, setUser, loading, setLoading } = useContext(StoreContext);
+    const { apiRoutes, user, setUser, setLoading, setError } =
+        useContext(StoreContext);
 
-    const formLogin = (e) => {
+    const formLogin = async (e) => {
         setLoading(true);
 
         e.preventDefault();
         const email = e.target.loginEmail.value.trim();
         const password = e.target.loginPassword.value.trim();
 
-        setPersistence(auth, browserLocalPersistence).then(async () => {
-            const data = await signInWithEmailAndPassword(
-                auth,
-                email,
-                password
-            ).catch(function (error) {
-                // Handle Errors here.
-                var errorCode = error.code;
-                var errorMessage = error.code.split("/")[1];
+        const res = await login({ email, password }, `${apiRoutes.user}/login`);
 
-                if (errorCode.startsWith("auth/wrong")) {
-                    alert("Wrong Password!");
-                    return;
-                }
-                if (errorCode.startsWith("auth/user")) {
-                    alert("User doesn't exist. Please Signup first.");
-                    return;
-                } else {
-                    alert(errorMessage);
-                    return;
-                }
-            });
-
-            if (data) {
-                setUser(auth.currentUser);
-            }
-        });
+        if (res.status === "Failed.") {
+            setError({ show: true, message: res.message });
+        } else {
+            setUser(res.data.user);
+        }
 
         setLoading(false);
     };
@@ -88,7 +63,7 @@ function Login() {
                     </div>
                 </form>
 
-                <div className="row">
+                {/* <div className="row">
                     <NavLink
                         to="#"
                         className="btn icon-btn"
@@ -106,7 +81,7 @@ function Login() {
                         <i className="fab fa-google"></i>
                         Login with Google
                     </NavLink>
-                </div>
+                </div> */}
 
                 <ul className="bg-bubbles">
                     <li></li>

@@ -1,42 +1,42 @@
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import React, { useContext } from "react";
 import { Redirect } from "react-router";
 import { Link } from "react-router-dom";
 
 import StoreContext from "../../controller/Context";
-import { auth } from "../../controller/Firebase";
-import { facebookLogin, googleLogin } from "../../controller/OAuth";
+import AuthController, {
+    setAuthToken,
+    signup,
+} from "../../controller/AuthController";
 
 function Signup() {
-    const { user, setUser, setLoading } = useContext(StoreContext);
+    const { apiRoutes, user, setUser, setLoading, setError } =
+        useContext(StoreContext);
 
-    function validateData(data) {
-        let userName = data.userName.value.trim();
-        let password = data.signupPassword.value.trim();
-        let confirmPassword = data.signupConfirmPassword.value.trim();
-        let email = data.signupEmail.value.trim();
-
-        if (!userName) {
-            alert("Enter your Name.");
+    function validateData(userCredential) {
+        if (!userCredential.name) {
+            setError({ show: true, message: "Enter your Name." });
             return false;
         }
 
         if (
             !/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
-                email
+                userCredential.email
             )
         ) {
-            alert("Invalid Email");
+            setError({ show: true, message: "Invalid Email." });
             return false;
         }
 
-        if (password.length < 8) {
-            alert("Password must be atleast 8 characters.");
+        if (userCredential.password.length < 8) {
+            setError({
+                show: true,
+                message: "Password must be atleast 8 characters.",
+            });
             return false;
         }
 
-        if (password !== confirmPassword) {
-            alert("Password doesn't match");
+        if (userCredential.password !== userCredential.confirmPassword) {
+            setError({ show: true, message: "Password doesn't match." });
             return false;
         }
 
@@ -45,36 +45,24 @@ function Signup() {
 
     const signupUser = async (e) => {
         e.preventDefault();
-
         setLoading(true);
-        let userName = e.target.userName.value.trim();
-        let password = e.target.signupPassword.value.trim();
-        let email = e.target.signupEmail.value.trim().toLowerCase();
 
-        if (validateData(e.target)) {
-            const data = await createUserWithEmailAndPassword(
-                auth,
-                email,
-                password
-            ).catch(function (error) {
-                // Handle Errors here.
-                var errorCode = error.code;
-                var errorMessage = error.message;
-                if (errorCode == "auth/weak-password") {
-                    alert(errorMessage);
-                    return;
-                } else {
-                    alert(errorMessage);
-                    return;
-                }
-            });
+        let userCredential = {};
+        userCredential.name = e.target.name.value.trim();
+        userCredential.email = e.target.email.value.trim().toLowerCase();
+        userCredential.password = e.target.password.value.trim();
+        userCredential.confirmPassword = e.target.confirmPassword.value.trim();
 
-            await updateProfile(auth.currentUser, {
-                displayName: userName,
-            });
+        if (validateData(userCredential)) {
+            const res = await signup(
+                userCredential,
+                `${apiRoutes.user}/signup`
+            );
 
-            if (data) {
-                setUser(auth.currentUser);
+            if (res.status === "Failed.") {
+                setError({ show: true, message: res.message });
+            } else {
+                setUser(res.data.user);
             }
         }
 
@@ -94,21 +82,21 @@ function Signup() {
                         type="text"
                         placeholder="User Name"
                         required
-                        name="userName"
+                        name="name"
                     />
                     <input
                         className="input"
                         type="email"
                         placeholder="Email"
                         required
-                        name="signupEmail"
+                        name="email"
                     />
                     <input
                         className="input"
                         type="password"
                         placeholder="Password"
                         required
-                        name="signupPassword"
+                        name="password"
                         minLength="8"
                     />
                     <input
@@ -117,7 +105,7 @@ function Signup() {
                         placeholder="Confirm Password"
                         minLength="8"
                         required
-                        name="signupConfirmPassword"
+                        name="confirmPassword"
                     />
 
                     <div className="row">
@@ -130,26 +118,6 @@ function Signup() {
                         </button>
                     </div>
                 </form>
-
-                <div className="row">
-                    <Link
-                        to="#"
-                        className="btn icon-btn"
-                        onClick={() => facebookLogin(setUser)}
-                    >
-                        <i className="fab fa-facebook-square"></i>
-                        Signup with Facebook
-                    </Link>
-
-                    <Link
-                        to="#"
-                        className="btn icon-btn"
-                        onClick={() => googleLogin(setUser)}
-                    >
-                        <i className="fab fa-google"></i>
-                        Signup with Google
-                    </Link>
-                </div>
 
                 <ul className="bg-bubbles">
                     <li></li>
